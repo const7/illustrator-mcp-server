@@ -29,6 +29,12 @@ import { register as registerExport } from '../../src/tools/export/export.js';
 import { register as registerCheckContrast } from '../../src/tools/read/check-contrast.js';
 import { register as registerExtractDesignTokens } from '../../src/tools/read/extract-design-tokens.js';
 import { register as registerCheckTextConsistency } from '../../src/tools/utility/check-text-consistency.js';
+import { register as registerCreateRectangle } from '../../src/tools/modify/create-rectangle.js';
+import { register as registerCreateTextFrame } from '../../src/tools/modify/create-text-frame.js';
+import { register as registerModifyObject } from '../../src/tools/modify/modify-object.js';
+import { register as registerCreateDocument } from '../../src/tools/modify/create-document.js';
+import { register as registerPlaceImage } from '../../src/tools/modify/place-image.js';
+import { register as registerCreateCropMarks } from '../../src/tools/modify/create-crop-marks.js';
 
 type ToolResponse = { content: Array<{ type: string; text?: string }> };
 type ToolHandler = (params: Record<string, unknown>) => Promise<ToolResponse>;
@@ -170,5 +176,32 @@ describe('export tool activation', () => {
       params,
       { activate },
     );
+  });
+});
+
+
+describe('DOM tool activation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockExecuteJsx.mockResolvedValue({ success: true });
+    mockExecuteJsxHeavy.mockResolvedValue({ success: true });
+  });
+
+  it.each([
+    [registerCreateRectangle, { x: 10, y: 20, width: 30, height: 40 }],
+    [registerCreateTextFrame, { x: 10, y: 20, contents: 'Test' }],
+    [registerModifyObject, { uuid: 'test', properties: { position: { x: 10, y: 20 } } }],
+    [registerCreateDocument, {}],
+    [registerPlaceImage, { file_path: '/tmp/test.png' }],
+  ])('DOM handler %s does not request activation', async (register, params) => {
+    await captureToolHandler(register)(params);
+    const calls = [...mockExecuteJsx.mock.calls, ...mockExecuteJsxHeavy.mock.calls];
+    expect(calls).toHaveLength(1);
+    expect(calls[0][2]?.activate ?? false).toBe(false);
+  });
+
+  it('crop marks still request activation', async () => {
+    await captureToolHandler(registerCreateCropMarks)({ style: 'japanese' });
+    expect(mockExecuteJsx).toHaveBeenCalledWith(expect.any(String), expect.any(Object), { activate: true });
   });
 });

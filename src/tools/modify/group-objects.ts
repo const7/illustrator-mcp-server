@@ -80,7 +80,7 @@ export function register(server: McpServer): void {
     {
       title: 'Group Objects',
       description:
-        'Group multiple objects into a single group. The first UUID in the array becomes the bottommost item, the last becomes the topmost. If any UUID is not found, nothing is grouped and the missing UUIDs are returned in notFound. Note: Illustrator will be activated (brought to foreground) during execution.',
+        'Group multiple objects into a single group. The first UUID in the array becomes the bottommost item, the last becomes the topmost. If any UUID is not found, nothing is grouped and the missing UUIDs are returned in notFound.',
       inputSchema: {
         uuids: z.array(z.string()).min(1).describe('UUIDs of objects to group. Order matters: first=bottom, last=top in layer panel.'),
         name: z.string().optional().describe('Name for the new group'),
@@ -93,7 +93,7 @@ export function register(server: McpServer): void {
       annotations: DESTRUCTIVE_ANNOTATIONS,
     },
     async (params) => {
-      const result = await executeJsx(jsxCode, params, { activate: true });
+      const result = await executeJsx(jsxCode, params);
       return formatToolResult(result);
     },
   );
